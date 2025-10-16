@@ -437,6 +437,14 @@ class OrconFanCard extends HTMLElement {
             window.orconFanCardInstance = this;
           }
         </script>
+        <script>
+          function forceRefresh() {
+            console.log("forceRefresh (html)");
+            if (window.orconFanCardInstance) {
+              window.orconFanCardInstance.forceRefresh();
+            }
+          }
+        </script>
       <div class="ventilation-card">
         <!-- Top Section with airflow -->
         <div class="top-section">
@@ -511,7 +519,7 @@ class OrconFanCard extends HTMLElement {
 
           <div class="side-value mid-left">
             <!-- Refresh Button -->
-            <button class="refresh-button" onclick="refreshCard()" title="Refresh all values">
+            <button class="refresh-button" onclick="triggerRefresh()" title="Refresh all values">
               <svg width="40" height="40" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M36.75 21C36.75 29.69848 29.69848 36.75 21 36.75C16.966145 36.75 13.2864725 35.23345 10.5 32.739525L5.25 28M5.25 21C5.25 12.30152 12.30152 5.25 21 5.25C25.033925 5.25 28.713475 6.76648 31.5 9.26044L36.75 14M5.25 36.75V28M5.25 28H14M36.75 5.25V14M36.75 14H28" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -668,7 +676,7 @@ class OrconFanCard extends HTMLElement {
       }
 
       function triggerRefresh() {
-        console.log('🔄 Manual refresh requested by user');
+        console.log('🔄 Manual refresh requested by user (html)');
 
         // Get the card instance from the global reference
         if (window.orconFanCardInstance) {
@@ -720,7 +728,7 @@ class OrconFanCard extends HTMLElement {
   }
 
   // Handle refresh button clicks
-  async refreshCard() {
+  async forceRefresh() {
     console.log('🔄 Manual refresh requested by user');
     if (window.orconFanCardInstance) {
       const success = await window.orconFanCardInstance.forceRefresh();
@@ -810,29 +818,18 @@ class OrconFanCard extends HTMLElement {
     }
 
     try {
-      console.log('🔄 Forcing refresh of all monitored entities...');
+      console.log('🔄 Sending 31DA request to refresh device data...');
 
-      // Get all entities we monitor
-      const entities = this.getEntities();
+      // Send 31DA request to refresh device data
+      await this.sendFanCommand('request31DA');
 
-      // Force update each entity through Home Assistant API
-      for (const entityId of entities) {
-        if (entityId && this._hass.states[entityId]) {
-          try {
-            // Trigger state update by calling the entity service
-            await this._hass.callService('homeassistant', 'update_entity', {
-              entity_id: entityId
-            });
-          } catch (error) {
-            console.warn(`Failed to update entity ${entityId}:`, error);
-          }
-        }
-      }
+      // Update the renderer with current data
+      this.render();
 
-      console.log('✅ Force refresh completed');
+      console.log('✅ 31DA request sent and renderer updated');
       return true;
     } catch (error) {
-      console.error('Error during force refresh:', error);
+      console.error('Error sending 31DA request:', error);
       return false;
     }
   }
@@ -879,7 +876,7 @@ class OrconFanCard extends HTMLElement {
   }
 
   triggerRefresh() {
-    console.log('🔄 Manual refresh requested by user');
+    console.log('🔄 Manual refresh requested by user (js)');
 
     // Get the card instance from the global reference
     if (window.orconFanCardInstance) {
@@ -960,12 +957,15 @@ class OrconFanCard extends HTMLElement {
 
     console.log('✅ Event listeners attached');
 
+    // Store the card instance globally
+    window.orconFanCardInstance = this;
+
     // Make functions globally available for onclick handlers
     window.updateTimerUI = this.updateTimerUI;
     window.updateBypassUI = this.updateBypassUI;
-    window.triggerRefresh = this.triggerRefresh;
+    window.triggerRefresh = this.triggerRefresh.bind(this);
     window.setBypassMode = (mode) => this.sendBypassCommand(mode);
-    window.refreshCard = this.refreshCard;
+    window.forceRefresh = this.forceRefresh.bind(this);
   }
 }
 
