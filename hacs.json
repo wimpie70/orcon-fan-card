@@ -4,11 +4,11 @@
   "zip_release": true,
   "filename": "orcon-fan-card.js",
   "domains": ["lovelace"],
-  "homeassistant": "2023.1.0",
+  "homeassistant": "2025.10.0",
   "render_readme": true,
-  "country": ["en"],
-  "contributors": ["your-github-username"],
-  "issues": "https://github.com/your-github-username/orcon-fan-card/issues",
-  "documentation": "https://github.com/your-github-username/orcon-fan-card",
-  "changelog": "https://github.com/your-github-username/orcon-fan-card/releases"
+  "country": ["nl"],
+  "contributors": ["wimpie70"],
+  "issues": "https://github.com/wimpie70/orcon-fan-card/issues",
+  "documentation": "https://github.com/wimpie70/orcon-fan-card",
+  "changelog": "https://github.com/wimpie70/orcon-fan-card/releases"
 }
