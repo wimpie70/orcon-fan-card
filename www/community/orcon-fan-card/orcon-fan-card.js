@@ -1,4 +1,5 @@
 import { NORMAL_SVG, BYPASS_OPEN_SVG } from './airflow-diagrams.js';
+import { CARD_STYLE } from './card-styles.js';
 
 class OrconFanCard extends HTMLElement {
   // All fan commands in one simple object
@@ -427,280 +428,7 @@ class OrconFanCard extends HTMLElement {
       <!DOCTYPE html>
       <html>
       <head>
-      <style>
-        .ventilation-card {
-          background: #1c1c1c;
-          border-radius: 12px;
-          padding: 16px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          color: #ffffff;
-          max-width: 500px;
-          width: 100%;
-          height: auto;
-          min-height: 400px;
-          margin: 0 auto;
-          box-sizing: border-box;
-          display: block;
-        }
-
-        .top-section {
-          background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
-          border-radius: 12px;
-          padding: 20px;
-          margin-bottom: 16px;
-          position: relative;
-          min-height: 280px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-        }
-
-        .centre-container {
-          position: absolute;
-          width: 150px;
-          height: 150px;
-          bottom: 70px;
-          left: 50%;
-          transform: translateX(-50%);
-          flex-shrink: 0;
-          z-index: 1;
-        }
-
-        .centre {
-          width: 100px;
-          height: 100px;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-direction: column;
-        }
-
-        .centre-inner {
-          text-align: center;
-          color: black;
-          font-weight: 600;
-        }
-
-        .speed-display {
-          font-size: 14px;
-          margin-bottom: 4px;
-        }
-
-        .fanmode {
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .timer-display {
-          position: absolute;
-          top: 15px;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          color: #333;
-          font-size: 14px;
-          white-space: nowrap;
-          padding: 8px 16px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 20px;
-          min-width: 80px;
-        }
-
-        .timer-icon {
-          width: 20px; /* 0.7 * 24px (24px is the viewBox size) */
-          height: 20px; /* 0.7 * 24px (24px is the viewBox size) */
-          flex-shrink: 0;
-        }
-
-        .refresh-button {
-          background: rgba(255, 255, 255, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          border-radius: 50%;
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #333;
-          transition: all 0.3s ease;
-          margin-left: 8px;
-        }
-
-        .refresh-button:hover {
-          background: rgba(255, 255, 255, 0.3);
-          transform: scale(1.1);
-        }
-
-        .refresh-button:active {
-          transform: scale(0.95);
-        }
-
-        .corner-value {
-          position: absolute;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          color: #333;
-        }
-
-        .corner-value.top-left {
-          top: 20px;
-          left: 20px;
-          align-items: flex-start;
-          text-align: left;
-        }
-
-        .corner-value.top-right {
-          top: 20px;
-          right: 20px;
-          align-items: flex-end;
-          text-align: right;
-        }
-
-        .corner-value.bottom-left {
-          bottom: 20px;
-          left: 20px;
-          align-items: flex-start;
-          text-align: left;
-        }
-
-        .corner-value.bottom-right {
-          bottom: 20px;
-          right: 20px;
-          align-items: flex-end;
-          text-align: right;
-        }
-
-        .temp-value {
-          font-size: 20px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .dehum-mode,
-        .dehum-active {
-          font-size: 20px;
-          color: #ff9800;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          min-height: 28px;
-          font-weight: 500;
-        }
-
-        .humidity-value {
-          font-size: 16px;
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .humidity-abs {
-          font-size: 16px;
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .comfort-temp {
-          font-size: 16px;
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          color: #ff9800;
-        }
-
-        .icon-circle {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          display: flex;
-          justify-content: center;
-          font-size: 20px;
-        }
-
-        .icon-circle.blue {
-          background: #4a90e2;
-          color: white;
-        }
-
-        .icon-circle.red {
-          background: #e74c3c;
-          color: white;
-        }
-
-        .airflow-diagram {
-          position: absolute;
-          width: 200px;
-          height: 160px;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          z-index: 0;
-        }
-
-        .controls-container {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          width: 100%;
-        }
-
-        .control-row {
-          display: flex;
-          gap: 12px;
-          justify-content: space-around;
-        }
-
-        .control-button {
-          background: #2a2a2a;
-          border: 2px solid #3a3a3a;
-          border-radius: 12px;
-          padding: 16px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          flex: 1;
-        }
-
-        .control-button:hover {
-          background: #353535;
-          border-color: #4a90e2;
-        }
-
-        .control-button.active {
-          background: #3a3a3a;
-          border-color: #4a90e2;
-        }
-
-        .control-icon {
-          font-size: 32px;
-          color: #4a90e2;
-        }
-
-        .control-label {
-          color: #ffffff;
-          font-size: 13px;
-          text-align: center;
-        }
-      </style>
+      <style>${CARD_STYLE}</style>
       </head>
       <body>
         <script>
@@ -719,14 +447,6 @@ class OrconFanCard extends HTMLElement {
               <path d="M12 6v6l4 2"></path>
             </svg>
             <span id="timer">0 min</span>
-            <button class="refresh-button" onclick="refreshCard()" title="Refresh all values">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                <polyline points="23,4 23,10 17,10"></polyline>
-                <polyline points="1,20 1,14 7,14"></polyline>
-                <path d="m3.51 9A9 9 0 0 1 14,2.5"></path>
-                <path d="m20.49 15A9 9 0 0 0 10,21.5"></path>
-              </svg>
-            </button>
           </div>
 
           <!-- Corner Values -->
@@ -787,6 +507,15 @@ class OrconFanCard extends HTMLElement {
               <span id="exhaustTemp">${exhaustTemp} °C</span>
               <span>🌡️</span>
             </div>
+          </div>
+
+          <div class="side-value mid-left">
+            <!-- Refresh Button -->
+            <button class="refresh-button" onclick="refreshCard()" title="Refresh all values">
+              <svg width="40" height="40" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M36.75 21C36.75 29.69848 29.69848 36.75 21 36.75C16.966145 36.75 13.2864725 35.23345 10.5 32.739525L5.25 28M5.25 21C5.25 12.30152 12.30152 5.25 21 5.25C25.033925 5.25 28.713475 6.76648 31.5 9.26044L36.75 14M5.25 36.75V28M5.25 28H14M36.75 5.25V14M36.75 14H28" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
 
 
