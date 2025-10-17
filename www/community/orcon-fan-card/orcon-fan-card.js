@@ -1,5 +1,7 @@
 import { NORMAL_SVG, BYPASS_OPEN_SVG } from './airflow-diagrams.js';
 import { CARD_STYLE } from './card-styles.js';
+import { createCardHeader, createTopSection, createControlsSection, createCardFooter } from './templates/card-templates.js';
+import { createTemplateData } from './templates/template-helpers.js';
 
 class OrconFanCard extends HTMLElement {
   // All fan commands in one simple object
@@ -384,370 +386,34 @@ class OrconFanCard extends HTMLElement {
     // Comfort temperature entity (will be available when created)
     const comfortTemp = hass.states[config.comfort_temp_entity]?.state || '?';
 
-    // Calculate absolute humidity (g/m³)
-    const calculateAbsoluteHumidity = (temp, humidity) => {
-      if (temp === '?' || humidity === '?') return '?';
-      const tempC = parseFloat(temp);
-      const relHum = parseFloat(humidity);
-      if (isNaN(tempC) || isNaN(relHum)) return '?';
-
-      // Saturation vapor pressure (hPa)
-      const es = 6.112 * Math.exp((17.67 * tempC) / (tempC + 243.5));
-      // Actual vapor pressure (hPa)
-      const e = (relHum / 100) * es;
-      // Absolute humidity (g/m³) - divide by 10 to match expected scale
-      const ah = (2.1674 * e) / (273.15 + tempC) * 100;
-
-      return ah.toFixed(1);
-    };
-
-    const indoorAbsHumidity = calculateAbsoluteHumidity(indoorTemp, indoorHumidity);
-    const outdoorAbsHumidity = calculateAbsoluteHumidity(outdoorTemp, outdoorHumidity);
-
-    console.log('🔧 Generating card HTML...');
-
-    // Determine which SVG to use based on bypass position (imported from airflow-diagrams.js)
+    // Determine which SVG to use based on bypass position
     const isBypassOpen = hass.states[config.bypass_entity]?.state === 'on';
     const selectedSvg = isBypassOpen ? BYPASS_OPEN_SVG : NORMAL_SVG;
-    this.innerHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-      <style>${CARD_STYLE}</style>
-      </head>
-      <body>
-        <script>
-          // Store the card instance globally so it can be accessed from inline handlers
-          if (!window.orconFanCardInstance) {
-            window.orconFanCardInstance = this;
-          }
-        </script>
-        <script>
-          function forceRefresh() {
-            console.log("forceRefresh (html)");
-            if (window.orconFanCardInstance) {
-              window.orconFanCardInstance.forceRefresh();
-            }
-          }
-        </script>
-      <div class="ventilation-card">
-        <!-- Top Section with airflow -->
-        <div class="top-section">
-          <!-- Timer -->
-          <div class="timer-display">
-            <svg class="timer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 6v6l4 2"></path>
-            </svg>
-            <span id="timer">0 min</span>
-          </div>
 
-          <!-- Corner Values -->
-          <div class="corner-value top-left">
-            <div class="icon-circle blue">☁️</div>
-            <div class="temp-value">
-              <span id="outdoorTemp">${outdoorTemp} °C</span>
-              <span>🌡️</span>
-            </div>
-            <div class="humidity-value">
-              <span id="outdoorHumidity">${outdoorHumidity}%</span>
-              <span>💧</span>
-            </div>
-            <div class="humidity-abs">
-              <span id="outdoorAbsHumidity">${outdoorAbsHumidity} g/m³</span>
-              <span>💨</span>
-            </div>
-          </div>
+    // Create template data object (includes absolute humidity calculation)
+    const rawData = {
+      indoorTemp, outdoorTemp, indoorHumidity, outdoorHumidity,
+      supplyTemp, exhaustTemp, fanSpeed, fanMode, co2Level, flowRate,
+      dehumMode, dehumActive, comfortTemp,
+      timerMinutes: 0, // This would come from timer state
+      efficiency: 75   // This would come from calculated efficiency
+    };
 
-          <div class="corner-value top-right">
-            <div class="icon-circle red">🏠</div>
-            <div class="temp-value">
-              <span id="indoorTemp">${indoorTemp} °C</span>
-              <span>🌡️</span>
-            </div>
-            <div class="humidity-value">
-              <span id="indoorHumidity">${indoorHumidity}%</span>
-              <span>💧</span>
-            </div>
-            <div class="humidity-abs">
-              <span id="indoorAbsHumidity">${indoorAbsHumidity} g/m³</span>
-              <span>💨</span>
-            </div>
-            <div class="comfort-temp">
-              <span id="comfortTemp">${comfortTemp} °C</span>
-              <span>🌡️</span>
-            </div>
-            <!-- Dehumidifier Mode - Auto Moisture Sensing -->
-            <div class="dehum-mode">
-              <span id="dehumMode">${dehumMode}</span>
-              <span>🖐️</span>
-            </div>
-            <div class="dehum-active">
-              <span id="dehumActive">${dehumActive}</span>
-              <span>💨</span>
-            </div>
-          </div>
+    const templateData = createTemplateData(rawData);
+    // Add airflow SVG to template data
+    templateData.airflowSvg = selectedSvg;
 
-          <div class="corner-value bottom-right">
-            <div class="temp-value">
-              <span id="supplyTemp">${supplyTemp} °C</span>
-              <span>🌡️</span>
-            </div>
-          </div>
+    console.log('🔧 Generating card HTML using templates...');
 
-          <div class="corner-value bottom-left">
-            <div class="temp-value">
-              <span id="exhaustTemp">${exhaustTemp} °C</span>
-              <span>🌡️</span>
-            </div>
-          </div>
+    // Generate HTML using template functions
+    const cardHtml = [
+      createCardHeader(CARD_STYLE),
+      createTopSection(templateData),
+      createControlsSection(),
+      createCardFooter()
+    ].join('');
 
-          <div class="side-value mid-left">
-            <!-- Refresh Button -->
-            <button class="refresh-button" onclick="triggerRefresh()" title="Refresh all values">
-              <svg width="40" height="40" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M36.75 21C36.75 29.69848 29.69848 36.75 21 36.75C16.966145 36.75 13.2864725 35.23345 10.5 32.739525L5.25 28M5.25 21C5.25 12.30152 12.30152 5.25 21 5.25C25.033925 5.25 28.713475 6.76648 31.5 9.26044L36.75 14M5.25 36.75V28M5.25 28H14M36.75 5.25V14M36.75 14H28" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-
-
-
-          <!-- SVG Flow Direction Arrows -->
-          <!-- Heat Recovery Ventilation Diagram -->
-          <!-- Heat Recovery Ventilation Diagram -->
-          <div class="airflow-diagram">
-            ${selectedSvg}
-          </div>
-
-          <!-- centre -->
-          <div class="centre-container">
-            <div class="centre">
-              <div class="centre-inner">
-                <div class="speed-display" id="fanSpeed">${fanSpeed}</div>
-                <div class="fanmode" id="fanMode">${fanMode}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom Stats -->
-          <div style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; font-size: 13px; color: #333; z-index: 2;">
-            <div style="display: flex; align-items: center; gap: 4px;">
-              <span>📊</span>
-              <span id="efficiency">75 d</span>
-            </div>
-            <div>
-              <span id="co2Level">${co2Level}%</span>
-            </div>
-            <div>
-              <span id="flowRate">${flowRate} L/s</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Control Buttons - 4 rows -->
-        <div class="controls-container">
-          <!-- Row 1: Fan Modes -->
-          <div class="control-row">
-            <div class="control-button" data-mode="away">
-              <div class="control-icon">🏠</div>
-              <div class="control-label">Away</div>
-            </div>
-            <div class="control-button" data-mode="auto">
-              <div class="control-icon">🌀</div>
-              <div class="control-label">Auto</div>
-            </div>
-            <div class="control-button" data-mode="active">
-              <div class="control-icon">⚡</div>
-              <div class="control-label">Dehumidify</div>
-            </div>
-          </div>
-
-          <!-- Row 2: Fan Speeds -->
-          <div class="control-row">
-            <div class="control-button" data-mode="low">
-              <div class="control-icon">🌀</div>
-              <div class="control-label">Low</div>
-            </div>
-            <div class="control-button" data-mode="medium">
-              <div class="control-icon">🌀</div>
-              <div class="control-label">Medium</div>
-            </div>
-            <div class="control-button" data-mode="high">
-              <div class="control-icon">🌀</div>
-              <div class="control-label">High</div>
-            </div>
-          </div>
-
-          <!-- Row 3: Timer -->
-          <div class="control-row">
-            <div class="control-button" data-timer="15">
-              <div class="control-icon">⏱️</div>
-              <div class="control-label">15m</div>
-            </div>
-            <div class="control-button" data-timer="30">
-              <div class="control-icon">⏰</div>
-              <div class="control-label">30m</div>
-            </div>
-            <div class="control-button" data-timer="60">
-              <div class="control-icon">⏳</div>
-              <div class="control-label">60m</div>
-            </div>
-          </div>
-
-          <!-- Row 4: Bypass -->
-          <div class="control-row">
-            <div class="control-button" onclick="setBypassMode('auto')">
-              <div class="control-icon">🔄</div>
-              <div class="control-label">Bypass Auto</div>
-            </div>
-            <div class="control-button" onclick="setBypassMode('close')">
-              <div class="control-icon">⊞</div>
-              <div class="control-label">Bypass Close</div>
-            </div>
-            <div class="control-button" onclick="setBypassMode('open')">
-              <div class="control-icon">⊟</div>
-              <div class="control-label">Bypass Open</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <script>
-        console.log('🔧 Card HTML generated, running inline scripts');
-
-        // Update UI
-        document.getElementById('fanMode').textContent = mode;
-
-        // Update active state for all button types
-        document.querySelectorAll('.control-button').forEach(btn => {
-          const label = btn.querySelector('.control-label').textContent;
-
-          // Handle mode buttons (away, auto, active)
-          if (['Away', 'Auto', 'Active', 'Dehumidify'].includes(label)) {
-            if (label.toLowerCase() === mode) {
-              btn.classList.add('active');
-            } else {
-              btn.classList.remove('active');
-            }
-          }
-
-          // Handle speed buttons (low, medium, high)
-          else if (['Low', 'Medium', 'High'].includes(label)) {
-            if (label.toLowerCase() === mode) {
-              btn.classList.add('active');
-            } else {
-              btn.classList.remove('active');
-            }
-          }
-
-          // Timer and bypass buttons are handled by their respective functions
-        });
-      }
-
-      function updateTimerUI(minutes) {
-        console.log('Updating timer UI to:', minutes, 'minutes');
-        document.getElementById('timer').textContent = minutes + ' min';
-
-        // Update active state
-        document.querySelectorAll('.control-button').forEach(btn => {
-          const label = btn.querySelector('.control-label').textContent;
-          if (label === minutes + 'm') {
-            btn.classList.add('active');
-          } else if (['15m', '30m', '60m'].includes(label)) {
-            btn.classList.remove('active');
-          }
-        });
-      }
-
-      function triggerRefresh() {
-        console.log('🔄 Manual refresh requested by user (html)');
-
-        // Get the card instance from the global reference
-        if (window.orconFanCardInstance) {
-          window.orconFanCardInstance.forceRefresh().then(success => {
-            if (success) {
-              console.log('✅ Manual refresh completed');
-              // Show a brief success indicator (optional)
-              const refreshBtn = document.querySelector('.refresh-button');
-              if (refreshBtn) {
-                refreshBtn.style.background = 'rgba(76, 175, 80, 0.3)';
-                setTimeout(() => {
-                  refreshBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-                }, 500);
-              }
-            } else {
-              console.error('❌ Manual refresh failed');
-              // Show error indicator (optional)
-              const refreshBtn = document.querySelector('.refresh-button');
-              if (refreshBtn) {
-                refreshBtn.style.background = 'rgba(244, 67, 54, 0.3)';
-                setTimeout(() => {
-                  refreshBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-                }, 1000);
-              }
-            }
-          });
-        } else {
-          console.error('Card instance not found for refresh');
-        }
-      }
-
-  // Handle bypass button clicks with UI update and command sending
-  async setBypassMode(mode) {
-    console.log('Setting bypass to:', mode);
-    try {
-      // Update UI using the card instance
-      if (window.orconFanCardInstance) {
-        window.orconFanCardInstance.updateBypassUI(mode);
-        // Send command to device
-        await window.orconFanCardInstance.sendBypassCommand(mode);
-      } else {
-        console.error('Card instance not available for bypass mode');
-      }
-    } catch (error) {
-      console.error('Error setting bypass mode to ' + mode + ':', error);
-      // Optionally show user feedback
-      console.warn('Bypass command may have failed - check Home Assistant logs');
-    }
-  }
-
-  // Handle refresh button clicks
-  async forceRefresh() {
-    console.log('🔄 Manual refresh requested by user');
-    if (window.orconFanCardInstance) {
-      const success = await window.orconFanCardInstance.forceRefresh();
-      if (success) {
-        console.log('✅ Manual refresh completed');
-        // Show a brief success indicator (optional)
-        const refreshBtn = document.querySelector('.refresh-button');
-        if (refreshBtn) {
-          refreshBtn.style.background = 'rgba(76, 175, 80, 0.3)';
-          setTimeout(() => {
-            refreshBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-          }, 500);
-        }
-      } else {
-        console.error('❌ Manual refresh failed');
-        // Show error indicator (optional)
-        const refreshBtn = document.querySelector('.refresh-button');
-        if (refreshBtn) {
-          refreshBtn.style.background = 'rgba(244, 67, 54, 0.3)';
-          setTimeout(() => {
-            refreshBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-          }, 1000);
-        }
-      }
-    } else {
-      console.error('Card instance not found for refresh');
-    }
-  }
-
-
-      </script>
-      </body>
-      </html>
-    `;
+    this.innerHTML = cardHtml;
 
     console.log('✅ Card HTML generated successfully');
   }
