@@ -161,8 +161,8 @@ class OrconFanCard extends HTMLElement {
   validateEntities() {
     if (!this._hass || !this._config) return;
 
-    console.log('=== Entity Validation Debug ===');
-    console.log(`Fan entity: ${this._config.fan_entity}`);
+//    console.log('=== Entity Validation Debug ===');
+//    console.log(`Fan entity: ${this._config.fan_entity}`);
 
     const entities = this.getEntities();
     const missing = [];
@@ -176,7 +176,7 @@ class OrconFanCard extends HTMLElement {
       }
     });
 
-    console.log('Found entities:', found);
+//    console.log('Found entities:', found);
     if (missing.length > 0) {
       console.warn('Missing entities:', missing);
     } else {
@@ -213,18 +213,30 @@ class OrconFanCard extends HTMLElement {
     if (!this._hass) {
       throw new Error('Home Assistant instance not available');
     }
-
+      
+    let sensor_id = 'climate.' + deviceId.replace(/:/g, '_');
     try {
-      const result = await this._hass.connection.sendMessagePromise({
-        type: 'ramses_cc/get_bound_rem',
-        device_id: deviceId
-      });
-
-      return result.rem_id;
+      console.log('bound_rem: ', this._hass.states[sensor_id].attributes.bound_rem);
+      let bound_rem = this._hass.states[sensor_id].attributes.bound_rem;
+      if (bound_rem) {
+        return bound_rem;
+      }
     } catch (error) {
       console.error('Error getting bound REM device:', error);
       throw error;
     }
+
+    // try {
+    //   const result = await this._hass.connection.sendMessagePromise({
+    //     type: 'ramses_cc/get_bound_rem',
+    //     device_id: deviceId
+    //   });
+
+    //   return result.rem_id;
+    // } catch (error) {
+    //   console.error('Error getting bound REM device:', error);
+    //   throw error;
+    // }
   }
   
   // Method to send packet via ramses_cc service
@@ -277,8 +289,8 @@ class OrconFanCard extends HTMLElement {
           remId = deviceId;
         }
       } catch (error) {
-        console.warn(`WebSocket error getting bound REM: ${error.message}. Falling back to device_id.`);
-        remId = deviceId;
+//        console.warn(`WebSocket error getting bound REM: ${error.message}. Falling back to device_id.`);
+        remId = null;
       }
 
       // Send the packet
@@ -299,10 +311,10 @@ class OrconFanCard extends HTMLElement {
   }
 
   setConfig(config) {
-    console.log('=== OrconFanCard setConfig Debug ===');
-    console.log('Config received:', config);
-    console.log('Config type:', typeof config);
-    console.log('Config keys:', config ? Object.keys(config) : 'null');
+    // console.log('=== OrconFanCard setConfig Debug ===');
+    // console.log('Config received:', config);
+    // console.log('Config type:', typeof config);
+    // console.log('Config keys:', config ? Object.keys(config) : 'null');
 
     if (!config.fan_entity && !config.device_id) {
       console.error('Missing required config: need fan_entity or device_id');
@@ -316,12 +328,7 @@ class OrconFanCard extends HTMLElement {
 
     // Normalize device ID to colon format for consistency
     let deviceId = config.device_id;
-    console.log('Original device_id:', deviceId);
-
     deviceId = deviceId.replace(/_/g, ':');
-    console.log('Normalized device_id:', deviceId);
-
-    // console.log('🔧 Building config object...');
 
     this._config = {
       device_id: deviceId,
@@ -343,22 +350,9 @@ class OrconFanCard extends HTMLElement {
       comfort_temp_entity: config.comfort_temp_entity || 'number.' + deviceId.replace(/:/g, '_') + '_param_75',
       ...config
     };
-
-    // console.log('✅ Config object built:', this._config);
-    // console.log('📋 Generated entity IDs:', {
-    //   indoor_temp: this._config.indoor_temp_entity,
-    //   outdoor_temp: this._config.outdoor_temp_entity,
-    //   fan_speed: this._config.fan_speed_entity,
-    //   fan_mode: this._config.fan_mode_entity,
-    // });
   }
 
   render() {
-    console.log('=== OrconFanCard Render Debug ===');
-    console.log('Card instance:', this);
-    console.log('Home Assistant object:', this._hass);
-    console.log('Card config:', this._config);
-
     if (!this._hass || !this._config) {
       console.error('❌ Missing hass or config:', { hass: !!this._hass, config: !!this._config });
       return;
@@ -372,7 +366,6 @@ class OrconFanCard extends HTMLElement {
     const config = this._config;
     const hass = this._hass;
 
-    console.log('📊 Entity values being used:');
     const indoorTemp = hass.states[config.indoor_temp_entity]?.state || '?';
     const outdoorTemp = hass.states[config.outdoor_temp_entity]?.state || '?';
     const indoorHumidity = hass.states[config.indoor_humidity_entity]?.state || '?';
@@ -405,19 +398,11 @@ class OrconFanCard extends HTMLElement {
       // Absolute humidity (g/m³) - divide by 10 to match expected scale
       const ah = (2.1674 * e) / (273.15 + tempC) * 100;
 
-      // console.log(`AH Debug - T:${tempC}°C, RH:${relHum}%, es:${es.toFixed(2)}hPa, e:${e.toFixed(2)}hPa, ah:${ah.toFixed(1)}g/m³`);
-
       return ah.toFixed(1);
     };
 
     const indoorAbsHumidity = calculateAbsoluteHumidity(indoorTemp, indoorHumidity);
     const outdoorAbsHumidity = calculateAbsoluteHumidity(outdoorTemp, outdoorHumidity);
-
-    console.log({
-      indoorTemp, outdoorTemp, indoorHumidity, outdoorHumidity,
-      supplyTemp, exhaustTemp, fanSpeed, fanMode, co2Level, flowRate,
-      indoorAbsHumidity, outdoorAbsHumidity
-    });
 
     console.log('🔧 Generating card HTML...');
 
@@ -765,8 +750,6 @@ class OrconFanCard extends HTMLElement {
     `;
 
     console.log('✅ Card HTML generated successfully');
-    console.log('📏 Card dimensions:', this.offsetWidth, 'x', this.offsetHeight);
-    console.log('🎨 Card styles applied, render complete');
   }
 
   // Configuration schema for visual editor
@@ -826,7 +809,7 @@ class OrconFanCard extends HTMLElement {
       // Update the renderer with current data
       this.render();
 
-      console.log('✅ 31DA request sent and renderer updated');
+      console.log('✅ 31DA request sent and entities updated');
       return true;
     } catch (error) {
       console.error('Error sending 31DA request:', error);
