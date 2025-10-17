@@ -397,12 +397,19 @@ class OrconFanCard extends HTMLElement {
       supplyTemp, exhaustTemp, fanSpeed, fanMode, co2Level, flowRate,
       dehumMode, dehumActive, comfortTemp,
       timerMinutes: 0, // This would come from timer state
-      efficiency: 75   // This would come from calculated efficiency
+      // efficiency: 75   // Remove hardcoded value - let template calculate it
     };
+
+    console.log('🔍 DEBUG - Raw temperature values:', {
+      supplyTemp, exhaustTemp, outdoorTemp,
+      indoorTemp, outdoorTemp
+    });
 
     const templateData = createTemplateData(rawData);
     // Add airflow SVG to template data
     templateData.airflowSvg = selectedSvg;
+
+    console.log('🔍 DEBUG - Calculated efficiency:', templateData.efficiency);
 
     console.log('🔧 Generating card HTML using templates...');
 

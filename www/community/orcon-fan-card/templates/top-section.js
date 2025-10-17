@@ -114,7 +114,7 @@ export function createTopSection(data) {
         <div style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; font-size: 13px; color: #333; z-index: 2;">
           <div style="display: flex; align-items: center; gap: 4px;">
             <span>📊</span>
-            <span id="efficiency">${efficiency} d</span>
+            <span id="efficiency">${efficiency}%</span>
           </div>
           <div>
             <span id="co2Level">${co2Level}%</span>
