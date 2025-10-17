@@ -1,6 +1,3 @@
-// Make editor globally available for Home Assistant
-window.OrconFanCardEditor = OrconFanCardEditor;
-
 // orcon-fan-card-editor.js
 class OrconFanCardEditor extends HTMLElement {
   constructor() {
@@ -119,7 +116,7 @@ class OrconFanCardEditor extends HTMLElement {
           padding: 8px 12px;
           border: 1px solid var(--divider-color);
           border-radius: 4px;
-          background: var(--input-background-color, #fff);
+          // background: #f0f0f0 !important;
           color: var(--primary-text-color);
           font-size: 14px;
         }
@@ -225,3 +222,6 @@ class OrconFanCardEditor extends HTMLElement {
 
 // Register the editor
 customElements.define('orcon-fan-card-editor', OrconFanCardEditor);
+
+// Make editor globally available for Home Assistant
+window.OrconFanCardEditor = OrconFanCardEditor;
