@@ -5,12 +5,19 @@ A custom Lovelace card for controlling and monitoring Orcon ventilation systems 
 ## Features
 
 - Real-time display of indoor/outdoor temperatures, humidity, fan speed, and more
-- Control fan modes (Away, Auto, Dehumidify), speeds (Low, Medium, High), and timers (15m, 30m, 60m)
-- Bypass control (Auto, Close, Open) with visual airflow diagram that changes based on state
-- Dehumidifier mode and comfort temperature display
-- Manual refresh button for forcing entity updates
-- Responsive design for various screen sizes
+- Control* fan modes (Away, Auto, Dehumidify), speeds (Low, Medium, High), and timers (15m, 30m, 60m)
+- Bypass control* (Auto, Close, Open) with visual airflow diagram that changes based on state
+- Efficiency calculation based on temperature differences
+- Absolute humidity calculation based on temperature and relative humidity
+- Dehumidifier** control, and indicators
+- Comfort temperature
+- Configuration Settings (2411)
 
+* Controls require a bound REM device defined for the FAN device. (config_flow)
+** Dehumidifier requires an automation and helpers to be installed (TODO: link)
+
+
+TODO:
 ## Installation via HACS
 
 1. Add this repository to HACS as a custom repository.
@@ -32,8 +39,3 @@ device_id: "32:153289"  # Your Ramses CC device ID
 bypass_entity: binary_sensor.32_153289_bypass_position  # Auto-detected
 # Other optional entities...
 ```
-
-## Development
-
-- Run `make install` to copy files to your HA instance.
-- Edit files in `www/community/orcon-fan-card/`.
